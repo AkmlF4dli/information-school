@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+
+use Illuminate\Support\Str;
 use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +35,23 @@ class ProfileController extends Controller
             $request->user()->email_verified_at = null;
         }
 
+        if ($request->hasFile('picture')) {
+            if (Auth::user()->picture == "/storage/picture/picture.jpg")
+            {
+             $file = Str::uuid() . "." . $request->file('picture')->getClientOriginalExtension();
+             $path = $request->file('picture')->storeAs('/profile', $file, 'public');
+             Auth::user()->picture = $path;
+            }
+            else{
+                Storage::disk('public')->delete(Auth::user()->picture);
+                $file = Str::uuid() . "." . $request->file('picture')->getClientOriginalExtension();
+                $path = $request->file('picture')->storeAs('/profile', $file, 'public');
+                Auth::user()->picture = $path;
+            }
+            $request->session()->regenerateToken();
+        }
+
+
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
@@ -47,6 +67,11 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        if (Auth::user()->picture != "/storage/picture/picture.jpg")
+        {
+             Storage::disk('public')->delete(Auth::user()->picture);
+        }
 
         Auth::logout();
 

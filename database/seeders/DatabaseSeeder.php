@@ -16,10 +16,13 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 User::factory()->create([
+    'picture' => '/storage/profile/profile.jpg',
+    'identity' => 1,
     'name' => 'Admin',
     'email' => 'info@smkn8jakarta.sch.id',
     'password' => Hash::make('smkn8'), // hashed password
     'role' => 'admin',
+    'remember_token' => null, 
 ]);
     }
 }

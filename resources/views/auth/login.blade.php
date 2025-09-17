@@ -28,7 +28,7 @@
             </div>
 
             <div x-data="{ role: '{{ old('role') }}' }">
-    <!-- Role -->
+    <!-- Role
     <div class="mt-4">
         <x-input-label for="role" :value="__('Role')" class="text-blue-700" />
         <select id="role" name="role" x-model="role" required
@@ -39,7 +39,7 @@
             <option value="eskul">Pelatih Ekstrakurikuler</option>
         </select>
         <x-input-error :messages="$errors->get('role')" class="mt-2" />
-    </div>
+    </div> -->
 
     <!-- Cabang Eskul -->
     <div x-show="role === 'eskul'" x-transition class="mt-4">
