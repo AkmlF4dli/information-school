@@ -23,10 +23,12 @@ class User extends Authenticatable
         'identity',
         'name',
         'email',
+        'kelas',
+        'jurusan',
         'password',
         'role',
         'tanggal_tugas',
-        'cabang_eskul',
+        'cabang_eskul'
     ];
 
     /**

@@ -117,9 +117,9 @@
   <!-- Script -->
   <script>
     const images = [
-      "https://source.unsplash.com/1200x400/?school,classroom",
-      "https://source.unsplash.com/1200x400/?students,education",
-      "https://source.unsplash.com/1200x400/?library,school"
+      "/storage/slide/slide1.jpg",
+      "/storage/slide/slide2.jpg",
+      "/storage/slide/slide3.jpg"
     ];
     let currentIndex = 0;
     const carouselImage = document.getElementById('carouselImage');

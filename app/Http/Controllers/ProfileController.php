@@ -8,6 +8,7 @@ use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
@@ -55,6 +56,25 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Delete Photo Profile
+     */
+
+    public function delete_picture(Request $request)
+    {
+        if (Auth::user()->picture == '/storage/profile/profile.jpg')
+        {
+            return redirect()->to('/myprofile');
+        }
+        else{
+            $user = Auth::user();  // Get the logged-in user directly
+            Storage::disk('public')->delete($user->picture);
+            $user->picture = '/storage/profile/profile.jpg';
+            $user->save();
+            return redirect()->to('/myprofile');
+        }
     }
 
     /**

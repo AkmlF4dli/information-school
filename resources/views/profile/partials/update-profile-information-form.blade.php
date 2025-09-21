@@ -39,21 +39,30 @@
     </div>
     @endif
 
+    <!-- Delete Profile Picture Button -->
+<div class="mt-1">
+    <a href="{{ url('/delete/picture') }}"
+       onclick="return confirm('Are you sure you want to delete your profile picture?');"
+       class="inline-block px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-md hover:bg-red-700 transition">
+        Delete Profile Picture
+    </a>
+</div>
+
     <!-- File Input -->
     <input type="file" id="imageInput" accept="image/*"
-           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+           class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0 file:text-sm file:font-semibold
                   file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" name="picture">
 </div>
 
-        <div>
+        <div class="mt-2">
             <x-input-label for="name" :value="__('Name')" class="text-blue-900" />
             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500" 
                           :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2 text-blue-700" :messages="$errors->get('name')" />
         </div>
 
-        <div>
+        <div class="mt-2">
             <x-input-label for="email" :value="__('Email')" class="text-blue-900" />
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                           :value="old('email', $user->email)" required autocomplete="username" />
@@ -78,7 +87,7 @@
             @endif
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="mt-2 flex items-center gap-4">
             <x-primary-button class="bg-blue-600 hover:bg-blue-700 focus:ring-blue-500">{{ __('Save') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')

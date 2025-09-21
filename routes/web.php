@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UpdateUserController;
+use App\Http\Controllers\AbsensiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,6 +13,8 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/delete/picture', [ProfileController::class, 'delete_picture'])->middleware(['auth', 'verified']);
+
 Route::middleware('auth')->group(function () {
     Route::get('/myprofile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/myprofile', [ProfileController::class, 'update'])->name('profile.update');
@@ -20,6 +23,7 @@ Route::middleware('auth')->group(function () {
        return view('edit.edit');
     })->name('user.edit');
     Route::post('/edit-user', [UpdateUserController::class, 'store'])->name('user.update');
+    Route::post('/absensi', [AbsensiController::class, 'store']);
 });
 
 Route::get('/about', function() {
