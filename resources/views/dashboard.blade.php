@@ -13,7 +13,8 @@
     </style>
 </head>
  <?php 
-$cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'Jepang', 'Korea'];
+ use \App\Models\Eskul;
+$cabangList = Eskul::query()->get();
 ?>
  @php
     use Carbon\Carbon;
@@ -87,7 +88,7 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
             Logout
         </button>
     </form>
-@else
+@elseif (Auth::user()->role == "guru")
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -139,7 +140,7 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
 
 {{-- Siswa & ketua eskul --}}
 @if (
-    !$check_absent_siswa
+    !isset($check_absent_siswa)
     && (Auth::user()->role == 'siswa' || Auth::user()->role == 'ketua_eskul')
 )
     @if (Auth::user()->role == 'siswa')
@@ -244,6 +245,9 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
             </p>
         @elseif (Auth::user()->role == 'pembina')
             <h3 class="text-lg font-semibold text-white">Pembina</h3>
+            <p class="text-xs text-white opacity-90 mt-1">
+                {{ Auth::user()->cabang_eskul }}
+            </p>
         @elseif (Auth::user()->role == 'eskul')
             <h3 class="text-lg font-semibold text-white">Pelatih</h3>
             <p class="text-xs text-white opacity-90 mt-1">
@@ -274,13 +278,14 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
                 </button>
 
                 {{-- Menu Admin --}}
-                @if (Auth::user()->role == 'admin')
+                @if (Auth::user()->role == 'kesiswaan')
                     <button
                         @click="showForm = 'lihatPembina'"
                         class="px-4 py-2 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold">
                         Lihat Pembina
                     </button>
-
+                @endif
+                @if (Auth::user()->role == 'admin')
                     <button
                         @click="showForm = 'lihatGuru'"
                         class="px-4 py-2 rounded-md bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold">
@@ -546,16 +551,13 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
             </div>
 
             <div class="mb-4">
-                <x-input-label for="password" :value="__('Password')" />
-                <x-text-input id="password" class="block mt-1 w-full" type="password" name="password"
-                    required autocomplete="new-password" />
+                <x-text-input id="password" class="block mt-1 w-full" type="hidden" name="password"
+                    required autocomplete="new-password" value="smkn8jakarta" />
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
 
             <div class="mb-6">
-                <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
-                    name="password_confirmation" required />
+                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="hidden" value="smkn8jakarta"                   name="password_confirmation" required />
                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
             </div>
 
@@ -626,6 +628,13 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
             <h1 class="text-2xl font-bold mb-6 text-gray-800">Tambah Pembina Baru</h1>
 
             <div class="mb-4">
+                <x-input-label for="identity" :value="__('NIP/Nomor Telp')" />
+                <x-text-input id="identity" class="block mt-1 w-full" type="number" name="identity"
+                    :value="old('NIP/Nomor Telp')" required autofocus autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            </div>
+
+            <div class="mb-4">
                 <x-input-label for="name" :value="__('Full Name')" />
                 <x-text-input id="name" class="block mt-1 w-full" type="text" name="name"
                     :value="old('name')" required autofocus autocomplete="name" />
@@ -639,6 +648,17 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
             </div>
 
+            <div class="mb-4">
+               <x-input-label for="role" :value="__('Cabang Eskul')" />
+               <select id="role" name="cabang_eskul" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" required>
+                  <option value="">-- Pilih Cabang Eskul --</option>
+                     @foreach ($cabangList as $eskul)
+                         <option value="{{ $eskul->cabang_eskul }}">{{ $eskul->cabang_eskul }}</option>
+                     @endforeach
+                </select>
+                <x-input-error :messages="$errors->get('role')" class="mt-2" />
+            </div>
+
             <div class="mb-4 hidden">
                 <x-input-label for="role" :value="__('Role')" />
                 <select id="role" name="role" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
@@ -648,16 +668,13 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
             </div>
 
             <div class="mb-4">
-                <x-input-label for="password" :value="__('Password')" />
-                <x-text-input id="password" class="block mt-1 w-full" type="password" name="password"
-                    required autocomplete="new-password" />
+                <x-text-input id="password" class="block mt-1 w-full" type="hidden" name="password"
+                    required autocomplete="new-password" value="smkn8jakarta" />
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
 
             <div class="mb-6">
-                <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
-                    name="password_confirmation" required />
+                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="hidden" value="smkn8jakarta"                   name="password_confirmation" required />
                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
             </div>
 
@@ -685,10 +702,15 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
 
                         <form method="GET" action="{{ route('user.edit') }}" class="mt-4 inline-block">
                             <input type="hidden" name="id" value="{{ $pembina->id }}">
+                            <input type="hidden" name="identity" value="{{ $pembina->identity }}">
                             <input type="hidden" name="name" value="{{ $pembina->name }}">
                             <input type="hidden" name="identity" value="{{ $pembina->identity}}">
                             <input type="hidden" name="email" value="{{ $pembina->email }}">
                             <input type="hidden" name="role" value="{{ $pembina->role }}">
+                            <button type="submit"
+                                class="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded">
+                                Edit
+                            </button>
                         </form>
 
                         <form action="{{ route('pembina.destroy', $pembina->email) }}" method="POST"
@@ -763,16 +785,13 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
             </div>
 
             <div class="mb-4">
-                <x-input-label for="password" :value="__('Password')" />
-                <x-text-input id="password" class="block mt-1 w-full" type="password" name="password"
-                    required autocomplete="new-password" />
+                <x-text-input id="password" class="block mt-1 w-full" type="hidden" name="password"
+                    required autocomplete="new-password" value="smkn8jakarta" />
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
 
             <div class="mb-6">
-                <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
-                    name="password_confirmation" required />
+                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="hidden" value="smkn8jakarta"                   name="password_confirmation" required />
                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
             </div>
 
@@ -1051,6 +1070,14 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
             @csrf
             <h1 class="text-2xl font-bold mb-6 text-gray-800">Tambah Pelatih Baru</h1>
 
+            <!-- Identity -->
+            <div class="mb-4">
+                <x-input-label for="identity" :value="__('NIP/Nomor Telp')" />
+                <x-text-input id="identity" class="block mt-1 w-full" type="number" name="identity"
+                    :value="old('NIP/Nomor Telp')" required autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            </div>
+
             <!-- Full Name -->
             <div class="mb-4">
                 <x-input-label for="name" :value="__('Full Name')" />
@@ -1082,9 +1109,6 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
                 <select id="cabang_eskul" name="cabang_eskul"
                     class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm">
                     <option value="">Pilih Cabang</option>
-                    @php
-                        $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra'];
-                    @endphp
                     @foreach ($cabangList as $cabang)
                         <option value="{{ $cabang }}" {{ old('cabang_eskul') === $cabang ? 'selected' : '' }}>
                             {{ $cabang }}
@@ -1096,17 +1120,13 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
 
             <!-- Password -->
             <div class="mb-4">
-                <x-input-label for="password" :value="__('Password')" />
-                <x-text-input id="password" class="block mt-1 w-full" type="password" name="password"
-                    required autocomplete="new-password" />
+                <x-text-input id="password" class="block mt-1 w-full" type="hidden" name="password"
+                    required autocomplete="new-password" value="smkn8jakarta" />
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
 
-            <!-- Confirm Password -->
             <div class="mb-6">
-                <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
-                    name="password_confirmation" required />
+                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="hidden" value="smkn8jakarta"                   name="password_confirmation" required />
                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
             </div>
 
@@ -1140,6 +1160,7 @@ $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'J
                         <!-- Edit -->
                         <form method="GET" action="{{ route('user.edit') }}" class="mt-4 inline-block">
                             <input type="hidden" name="id" value="{{ $pelatih->id }}">
+                            <input type="hidden" name="identity" value="{{ $pelatih->identity }}">
                             <input type="hidden" name="name" value="{{ $pelatih->name }}">
                             <input type="hidden" name="email" value="{{ $pelatih->email }}">
                             <input type="hidden" name="role" value="{{ $pelatih->role }}">

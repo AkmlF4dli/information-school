@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('absensi', function (Blueprint $table) {
             $table->id();
-            $table->integer('identity');
+            $table->bigInteger('identity');
             $table->string('name');
             $table->string('kelas')->nullable();
             $table->string('jurusan')->nullable();

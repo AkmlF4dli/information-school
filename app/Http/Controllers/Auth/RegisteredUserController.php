@@ -36,7 +36,7 @@ class RegisteredUserController extends Controller
 
         // Validate input
 $request->validate([
-    'identity'      => ['nullable', 'required_if:role,guru,siswa,ketua_eskul', 'integer'],
+    'identity'      => ['required', 'integer'],
     'name'          => ['required', 'string', 'max:255'],
     'email'         => ['required', 'string', 'lowercase', 'email', 'max:255'],
     'kelas'         => ['nullable', 'required_if:role,siswa,ketua_eskul', 'string', 'max:255'],
@@ -52,7 +52,7 @@ $request->validate([
 
     'role'          => ['required', 'string'],
     'tanggal_tugas' => ['nullable', 'required_if:role,guru', 'string'],
-    'cabang_eskul'  => ['nullable', 'required_if:role,eskul,ketua_eskul', 'string'],
+    'cabang_eskul'  => ['nullable', 'required_if:role,eskul,ketua_eskul,pembina', 'string'],
 ]);
 
 
@@ -80,11 +80,10 @@ if ($request->role == 'ketua_eskul' && $request->filled('identity')) {
             }
         }
 
+        // Check role
+        $user = ['guru', 'siswa', 'pembina', 'eskul', 'ketua_eskul', 'pelatih', 'kesiswaan'];
 
-        // Role groups
-        $noIdentityRoles    = ['admin', 'pembina', 'eskul'];
-        $needsIdentityRoles = ['guru', 'siswa', 'ketua_eskul'];
-
+        if (in_array($request->role, $user)){
         // Uniqueness checks
         $identityExists = User::where('identity', $request->identity)->exists();
         $nameExists     = User::where('name', $request->name)->exists();
@@ -103,29 +102,23 @@ if ($request->role == 'ketua_eskul' && $request->filled('identity')) {
             return $this->errorRedirect('Ketua Eskul sudah ada sebelumnya');
         }
 
-        // Case 1: Roles that don't require identity
-        if (in_array($request->role, $noIdentityRoles)) {
-            $user = $this->createUser($request);
-            return $this->successRedirect();
+        if ($identityExists) {
+                return $this->errorRedirect('NIS/NIP sudah ada sebelumnya');
         }
 
-        // Case 2: Roles that DO require identity
-        if (in_array($request->role, $needsIdentityRoles)) {
-            if ($identityExists) {
-                return $this->errorRedirect('NIS/NIP sudah ada sebelumnya');
-            }
-
-            if (!$request->filled('identity')) {
+        if (!$request->filled('identity')) {
                 return $this->errorRedirect('Untuk siswa, ketua eskul dan guru harus menggunakan identitas (NIS/NIP)');
-            }
-
+        }
             $user = $this->createUser($request);
             event(new Registered($user));
             return $this->successRedirect();
-        }
 
-        // Fallback
+        // Fallback 
         return $this->errorRedirect('Data Register tidak lengkap (corrupt)');
+        }
+        else{
+            return $this->errorRedirect('Role tidak terdaftar');
+        }
     }
 
     /**
@@ -143,7 +136,7 @@ if ($request->role == 'ketua_eskul' && $request->filled('identity')) {
             'password'      => Hash::make($request->password),
             'role'          => $request->role,
             'tanggal_tugas' => $request->tanggal_tugas,
-            'cabang_eskul'  => in_array($request->role, ['eskul', 'ketua_eskul']) ? $request->cabang_eskul : null,
+            'cabang_eskul'  => in_array($request->role, ['eskul', 'ketua_eskul', 'pembina']) ? $request->cabang_eskul : null,
         ]);
     }
 

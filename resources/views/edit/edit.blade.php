@@ -9,6 +9,14 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-sky-100 via-white to-sky-200 flex items-center justify-center px-4">
 
+@php 
+  use App\Models\Eskul;
+  $cabangList = Eskul::all();
+  $role = old('role', request()->query('role'));
+  $selectedDay = old('tanggal_tugas', request()->query('tanggal_tugas'));
+  $selectedEskul = old('tanggal_tugas', request()->query('tanggal_tugas'));
+@endphp
+
   <div class="bg-white shadow-2xl rounded-2xl w-full max-w-2xl p-8 space-y-6">
     <h1 class="text-3xl font-semibold text-gray-800 text-center">Edit Pengguna: 
       <span class="text-blue-600">{{ request()->query('name') }}</span>
@@ -30,11 +38,10 @@
       @csrf
       @method('PUT')
 
-     <!-- Identity -->
+      <!-- Identity -->
       <div>
-        <label for="name" class="block text-sm font-semibold text-gray-600 mb-1">NIS/NIP</label>
-        <small>Diperlukan untuk Guru dan Siswa</small>
-        <input type="text" id="name" name="identity"
+        <label for="identity" class="block text-sm font-semibold text-gray-600 mb-1">NIS/NIP/Nomor Telp</label>
+        <input type="text" id="identity" name="identity"
           value="{{ old('identity', request()->query('identity')) }}"
           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           required autofocus>
@@ -46,7 +53,7 @@
         <input type="text" id="name" name="name"
           value="{{ old('name', request()->query('name')) }}"
           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-          required autofocus>
+          required>
       </div>
 
       <!-- Email -->
@@ -59,7 +66,6 @@
       </div>
 
       <!-- Role -->
-      @php $role = old('role', request()->query('role')); @endphp
       <div>
         <label for="role" class="block text-sm font-semibold text-gray-600 mb-1">Role</label>
         <select id="role" name="role"
@@ -68,8 +74,9 @@
           <option value="">Pilih Role</option>
           @if (Auth::user()->role == "admin")
             <option value="guru" {{ $role == 'guru' ? 'selected' : '' }}>Guru</option>
-            <option value="pembina" {{ $role == 'pembina' ? 'selected' : '' }}>Pembina</option>
             <option value="siswa" {{ $role == 'siswa' ? 'selected' : '' }}>Siswa</option>
+          @elseif (Auth::user()->role == "kesiswaan")
+            <option value="pembina" {{ $role == 'pembina' ? 'selected' : '' }}>Pembina</option>
           @elseif (Auth::user()->role == "pembina")
             <option value="ketua_eskul" {{ $role == 'ketua_eskul' ? 'selected' : '' }}>Ketua Eskul</option>
             <option value="eskul" {{ $role == 'eskul' ? 'selected' : '' }}>Pelatih Ekstrakurikuler</option>
@@ -77,42 +84,50 @@
         </select>
       </div>
 
-      <!-- Cabang Eskul -->
-      @php
-        $cabangList = ['Futsal', 'Basket', 'Pramuka', 'Paskibra', 'IT', 'Paskibraka', 'Jepang', 'Korea'];
-        $selectedCabang = old('cabang_eskul', request()->query('cabang_eskul'));
-      @endphp
+      <!-- Cabang Eskul (Pelatih) -->
       <div id="cabang-eskul-wrapper" style="display: {{ $role === 'eskul' ? 'block' : 'none' }}">
         <label for="cabang_eskul" class="block text-sm font-semibold text-gray-600 mb-1">Cabang Eskul</label>
         <select id="cabang_eskul" name="cabang_eskul"
           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400">
           <option value="">Pilih Cabang</option>
           @foreach ($cabangList as $cabang)
-            <option value="{{ $cabang }}" {{ $selectedCabang === $cabang ? 'selected' : '' }}>
-              {{ $cabang }}
+            <option value="{{ $cabang->cabang_eskul }}" 
+              {{ old('cabang_eskul', request()->query('cabang_eskul')) == $cabang->cabang_eskul ? 'selected' : '' }}>
+              {{ $cabang->cabang_eskul }}
             </option>
           @endforeach
         </select>
       </div>
 
-<!-- Tanggal Tugas (khusus Guru) -->
-@php
-  $days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
-  $selectedDay = old('tanggal_tugas', request()->query('tanggal_tugas'));
-@endphp
-<div id="tanggal-tugas-wrapper" style="display: {{ $role === 'guru' ? 'block' : 'none' }}">
-  <label for="tanggal_tugas" class="block text-sm font-semibold text-gray-600 mb-1">Tanggal Tugas</label>
-  <select id="tanggal_tugas" name="tanggal_tugas"
-    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400">
-    <option value="">Pilih Hari</option>
-    @foreach ($days as $day)
-      <option value="{{ $day }}" {{ $selectedDay === $day ? 'selected' : '' }}>
-        {{ ucfirst($day) }}
-      </option>
-    @endforeach
-  </select>
-</div>
+      <!-- Tanggal Tugas (Guru) -->
+      @php $days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat']; @endphp
+      <div id="tanggal-tugas-guru-wrapper" style="display: {{ $role === 'guru' ? 'block' : 'none' }}">
+        <label for="tanggal_tugas" class="block text-sm font-semibold text-gray-600 mb-1">Tanggal Tugas</label>
+        <select id="tanggal_tugas" name="tanggal_tugas"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400">
+          <option value="">Pilih Hari</option>
+          @foreach ($days as $day)
+            <option value="{{ $day }}" {{ $selectedDay === $day ? 'selected' : '' }}>
+              {{ ucfirst($day) }}
+            </option>
+          @endforeach
+        </select>
+      </div>
 
+      <!-- Cabang Eskul (Pembina) -->
+      <div id="tanggal-tugas-pembina-wrapper" style="display: {{ $role === 'pembina' ? 'block' : 'none' }}">
+        <label for="tanggal_tugas" class="block text-sm font-semibold text-gray-600 mb-1">Cabang Eskul</label>
+        <select id="tanggal_tugas" name="tanggal_tugas"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400">
+          <option value="">Pilih Cabang Eskul</option>
+          @foreach ($cabangList as $eskul)
+            <option value="{{ $eskul->cabang_eskul }}" 
+              {{ $selectedEskul == $eskul->cabang_eskul ? 'selected' : '' }}>
+              {{ $eskul->cabang_eskul }}
+            </option>
+          @endforeach
+        </select>
+      </div>
 
       <!-- Tombol -->
       <div class="flex justify-between items-center pt-4">
@@ -131,7 +146,8 @@
   <script>
     function toggleFields(role) {
       document.getElementById('cabang-eskul-wrapper').style.display = role === 'eskul' ? 'block' : 'none';
-      document.getElementById('tanggal-tugas-wrapper').style.display = role === 'guru' ? 'block' : 'none';
+      document.getElementById('tanggal-tugas-guru-wrapper').style.display = role === 'guru' ? 'block' : 'none';
+      document.getElementById('tanggal-tugas-pembina-wrapper').style.display = role === 'pembina' ? 'block' : 'none';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
