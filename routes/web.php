@@ -85,6 +85,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/eskul/daftar/{cabang}', [UserController::class, 'daftarEskul'])->name('eskul.daftar');
     Route::delete('/eskul/hapus/{cabang}', [UserController::class, 'hapusEskul'])->name('eskul.hapus');
 
+    // User policy by Kesiswaan
+    Route::post('/addeskul', [UserController::class, 'addeskul'])->name('addeskul');
+    Route::post('/updateeskul/{id}', [UserController::class, 'updateeskul'])->name('updateeskul');
+
     // User policy by Pelatih Eskul
     Route::post('/tambahkan/materi', [UserController::class, 'storemateri'])->name('events.store');
 });
@@ -95,13 +99,6 @@ Route::get('/about', function() {
     return view('about');
 });
 
-Route::get('/profile', function() {
-    return "Profile Sekolah";
-});
-
-Route::get('/prestasi', function() {
-    return "Prestasi Sekolah";
-});
 
 Route::fallback(function () {
     return redirect('/');

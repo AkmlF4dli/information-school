@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('eskul', function (Blueprint $table) {
             $table->id();
             $table->string('cabang_eskul');
-            $table->string('hari_1');
-            $table->string('hari_2')->nullable();
-            $table->string('hari_3')->nullable();
+            $table->string('hari');
+            $table->time('waktu');
+            $table->string('tempat')->nullable();
             $table->timestamps();
         });
     }

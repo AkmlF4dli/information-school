@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Absensi;
+use App\Models\Eskul;
 use App\Models\Events;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -160,8 +161,8 @@ public function ketuaeskuldestroy($id)
             'kelas'         => ['nullable', 'required_if:role,siswa,ketua_eskul', 'string', 'max:255'],
             'jurusan'       => ['nullable', 'required_if:role,siswa,ketua_eskul', 'string', 'max:255'],
             'role'          => ['required', 'string'],
-            'mata_pelajaran'=> ['required', 'string'],
-            'jam_pelajaran' => ['nullable', 'string', 'max:255'],
+            'mata_pelajaran'=> ['nullable', 'required_if:alasan_izin,sakit, Sakit, SAKIT, alpa, Alpa, ALPA', 'string'],
+            'jam_pelajaran' => ['nullable', 'required_if:alasan_izin,sakit, Sakit, SAKIT, alpa, Alpa, ALPA', 'string', 'max:255'],
             'alasan_izin'   => ['nullable', 'string'],
             'tanggal_tugas' => ['nullable', 'required_if:role,guru', 'string'],
         ]);
@@ -189,7 +190,7 @@ public function ketuaeskuldestroy($id)
             'alasan'          => $request->alasan,
             'role'            => $request->role,
             'mata_pelajaran'  => $request->mata_pelajaran ?? null,
-            'jam_pelajaran'   => $request->jam_pelajaran,
+            'jam_pelajaran'   => $request->jam_pelajaran ?? null,
             'alasan_izin'     => $request->alasan,
             'tanggal_tugas'   => $request->tanggal_tugas,
         ]);
@@ -241,8 +242,8 @@ public function ketuaeskuldestroy($id)
             'kelas'         => ['nullable', 'required_if:role,siswa,ketua_eskul', 'string', 'max:255'],
             'jurusan'       => ['nullable', 'required_if:role,siswa,ketua_eskul', 'string', 'max:255'],
             'role'          => ['required', 'string'],
-            'mata_pelajaran'=> ['required', 'string'],
-            'jam_pelajaran' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'mata_pelajaran'=> ['nullable', 'required_if:alasan_izin,sakit, Sakit, SAKIT, alpa, Alpa, ALPA', 'string'],
+            'jam_pelajaran' => ['nullable', 'required_if:alasan_izin,sakit, Sakit, SAKIT, alpa, Alpa, ALPA', 'string', 'max:255'],
             'alasan_izin'   => ['nullable', 'string'],
             'tanggal_tugas' => ['nullable', 'required_if:role,guru', 'string'],
         ]);
@@ -375,6 +376,60 @@ public function hapusEskul($cabang)
         $data = Events::where('cabang_eskul', $cabang)->where('title', $title)->get();
         return view('eskul.materi', compact('data'));
     }
+    
+
+public function addeskul(Request $request)
+{
+    if (Auth::user()->role == "kesiswaan") {
+        $request->validate([
+            'cabang_eskul' => 'required|string|max:255',
+            'hari' => 'required|string|max:255',
+            'waktu' => 'required|date_format:H:i',
+            'tempat' => 'required|string|max:255',
+        ]);
+
+        Eskul::create([
+            'cabang_eskul' => $request->cabang_eskul,
+            'hari' => $request->hari,
+            'waktu' => $request->waktu,
+            'tempat' => $request->tempat,
+        ]);
+
+        return $this->successRedirect();
+    }
+}
+
+public function updateeskul(Request $request, $id)
+{
+    if (Auth::user()->role == "kesiswaan") {
+        $request->validate([
+            'cabang_eskul' => 'required|string|max:255',
+            'hari' => 'required|string|max:255',
+            'waktu' => 'required|date_format:H:i',
+            'tempat' => 'required|string|max:255',
+        ]);
+
+        $eskul = Eskul::findOrFail($id);
+
+        $eskul->update([
+            'cabang_eskul' => $request->cabang_eskul,
+            'hari' => $request->hari,
+            'waktu' => $request->waktu,
+            'tempat' => $request->tempat,
+        ]);
+
+        return redirect()->back()->with('notification', [
+            'type' => 'success',
+            'message' => 'Jadwal eskul berhasil diperbarui!',
+        ]);
+    }
+
+    return redirect()->back()->with('notification', [
+        'type' => 'error',
+        'message' => 'Anda tidak memiliki izin untuk mengupdate jadwal.',
+    ]);
+}
+
 
     private function successRedirect()
     {

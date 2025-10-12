@@ -30,7 +30,7 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         // Only pembina & admin can register users
-        if (!in_array(Auth::user()->role, ['pembina', 'admin'])) {
+        if (!in_array(Auth::user()->role, ['pembina', 'admin', 'kesiswaan'])) {
             return redirect()->to('/dashboard');
         }
 

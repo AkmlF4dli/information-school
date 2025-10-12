@@ -13,9 +13,12 @@
     </style>
 </head>
  <?php 
+ use \App\Models\User;
  use \App\Models\Eskul;
+ use \App\Models\Absensi;
 $cabangList = Eskul::query()->get();
-?>
+$eskulList = Eskul::all();
+?> 
  @php
     use Carbon\Carbon;
 
@@ -248,6 +251,8 @@ $cabangList = Eskul::query()->get();
             <p class="text-xs text-white opacity-90 mt-1">
                 {{ Auth::user()->cabang_eskul }}
             </p>
+        @elseif (Auth::user()->role == 'kesiswaan')
+            <h3 class="text-lg font-semibold text-white">Kesiswaan</h3>
         @elseif (Auth::user()->role == 'eskul')
             <h3 class="text-lg font-semibold text-white">Pelatih</h3>
             <p class="text-xs text-white opacity-90 mt-1">
@@ -282,7 +287,12 @@ $cabangList = Eskul::query()->get();
                     <button
                         @click="showForm = 'lihatPembina'"
                         class="px-4 py-2 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold">
-                        Lihat Pembina
+                        Lihat Pembina Eskul
+                    </button>
+                    <button
+                        @click="showForm = 'lihatcabangEskul'"
+                        class="px-4 py-2 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold">
+                        Lihat Eskul
                     </button>
                 @endif
                 @if (Auth::user()->role == 'admin')
@@ -360,80 +370,499 @@ $cabangList = Eskul::query()->get();
 
         <!-- Dashboard Welcome -->
 <div x-show="showForm === 'dashboard'" class="p-4">
-    @if (Auth::user()->role != 'siswa' && Auth::user()->role != 'ketua_eskul')
-        <!-- Dashboard Non-Siswa -->
-        <h1 class="text-2xl font-bold text-gray-800">
-            Selamat datang, {{ Auth::user()->name }}!
-        </h1>
-        <p class="mt-2 text-gray-600">Silakan pilih menu di sebelah kiri.</p>
+    <!-- Kesiswaan Dashboard -->
+    @if (Auth::user()->role == 'kesiswaan')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Ekstrakurikuler</title>
+  <style>
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background: #f2f6fc;
+      margin: 0;
+      padding: 0;
+    }
 
-        @if (Auth::user()->role == "guru")
-            @php
-                // Data Guru
-                $totalGuru = \App\Models\Absensi::where('role', 'guru')->count();
-                $guruIzin = \App\Models\Absensi::where('role', 'guru')
-                    ->whereNotNull('alasan_izin')
-                    ->where('alasan_izin', '!=', '')
-                    ->count();
-                $persentaseGuru = $totalGuru > 0 ? ($guruIzin / $totalGuru) * 100 : 0;
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 40px auto;
+    }
 
-                // Data Siswa
-                $totalSiswa = \App\Models\Absensi::where('role', 'siswa')->count();
-                $siswaIzin = \App\Models\Absensi::where('role', 'siswa')
-                    ->whereNotNull('alasan_izin')
-                    ->where('alasan_izin', '!=', '')
-                    ->count();
-                $persentaseSiswa = $totalSiswa > 0 ? ($siswaIzin / $totalSiswa) * 100 : 0;
-            @endphp
+    .title {
+      text-align: center;
+      font-size: 30px;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-            <div class="grid grid-cols-2 gap-6 p-6 mt-6 bg-gray-100 rounded-lg shadow">
-                <!-- Kolom Guru -->
-                <div class="p-6 bg-white rounded-lg shadow">
-                    <h2 class="text-lg font-bold mb-3">Persentase Izin Guru</h2>
-                    <p>Total Guru: {{ $totalGuru }}</p>
-                    <p>Guru dengan izin: {{ $guruIzin }}</p>
-                    <p>Persentase: <span class="font-semibold">{{ number_format($persentaseGuru, 2) }}%</span></p>
-                    <canvas id="chartGuru" class="mt-4"></canvas>
-                </div>
+    .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
 
-                <!-- Kolom Siswa -->
-                <div class="p-6 bg-white rounded-lg shadow">
-                    <h2 class="text-lg font-bold mb-3">Persentase Izin Siswa</h2>
-                    <p>Total Siswa: {{ $totalSiswa }}</p>
-                    <p>Siswa dengan izin: {{ $siswaIzin }}</p>
-                    <p>Persentase: <span class="font-semibold">{{ number_format($persentaseSiswa, 2) }}%</span></p>
-                    <canvas id="chartSiswa" class="mt-4"></canvas>
-                </div>
+    .card {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border-radius: 14px;
+      width: 240px;
+      padding: 25px 20px;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.6);
+    }
+
+    .card .name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card .desc {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Flex Card Container -->
+        <center><h1 class="title">Daftar Ekstrakurikuler</h1></center>
+    <div class="flex flex-wrap justify-center gap-6">
+      @foreach ($eskulList as $eskul)
+      <a href="/eskul?cabang={{ $eskul->cabang_eskul }}">
+        <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl shadow-lg w-60 p-5 text-center cursor-pointer hover:scale-105 transition">
+          <div class="text-lg font-semibold mb-1">{{ $eskul->cabang_eskul }}</div>
+        </div>
+      </a>
+      @endforeach
+    </div>
+</body>
+</html>
+@endif
+
+<!-- pembina -->
+@if (Auth::user()->role == "pembina")
+
+<?php
+$currentCabang = Auth::user()->cabang_eskul;
+
+// Ambil jadwal dari tabel Eskul
+$jadwalList = Eskul::where('cabang_eskul', $currentCabang)->get();
+
+// Ambil pelatih dan ketua dari tabel User
+$pelatihList = User::where('role', 'eskul')
+                    ->where('cabang_eskul', $currentCabang)
+                    ->get();
+
+$ketuaList = User::where('role', 'ketua_eskul')
+                  ->where('cabang_eskul', $currentCabang)
+                  ->get();
+?>
+
+<div x-data="{ showForm: 'dashboard' }" class="p-6 min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-blue-200">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .dashboard-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 2rem;
+      letter-spacing: 1px;
+    }
+
+    /* --- JADWAL SECTION --- */
+    .jadwal-container {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border-radius: 16px;
+      padding: 35px 30px;
+      margin-bottom: 40px;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+      text-align: center;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .jadwal-container:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.6);
+    }
+
+    .jadwal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+
+    .jadwal-info {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 25px;
+      font-size: 1rem;
+    }
+
+    .jadwal-info div {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 12px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+      min-width: 160px;
+    }
+
+    .section-container {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 18px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      padding: 25px 30px;
+      flex: 1;
+      transition: all 0.3s ease;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #1e40af;
+      margin-bottom: 15px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .flex-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border-radius: 16px;
+      width: 220px;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.6);
+    }
+
+    .name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .role, .cabang {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .empty {
+      text-align: center;
+      color: #4b5563;
+      font-size: 0.95rem;
+      padding: 10px 0;
+    }
+  </style>
+
+  <div x-show="showForm === 'dashboard'" x-transition>
+    <div class="dashboard-title">Dashboard {{ Auth::user()->cabang_eskul }}</div>
+
+    <!-- Jadwal Eskul (Full Width) -->
+    @forelse ($jadwalList as $jadwal)
+      <div class="jadwal-container">
+        <div class="jadwal-title">Jadwal {{ $jadwal->cabang_eskul }}</div>
+        <div class="jadwal-info">
+          @if (!empty($jadwal->hari_1))
+            <div>🗓 <strong>{{ $jadwal->hari_1 }}</strong></div>
+          @endif
+          @if (!empty($jadwal->waktu))
+            <div>⏰ <strong>{{ $jadwal->waktu }}</strong></div>
+          @endif
+          @if (!empty($jadwal->tempat))
+            <div>📍 <strong>{{ $jadwal->tempat }}</strong></div>
+          @endif
+        </div>
+      </div>
+    @empty
+      <div class="empty">Belum ada jadwal untuk cabang ini.</div>
+    @endforelse
+
+    <!-- Pelatih & Ketua Section -->
+    <div class="flex-container">
+      
+      <!-- Pelatih -->
+      <div class="section-container">
+        <div class="section-title">Pelatih Eskul</div>
+        <div class="grid">
+          @forelse ($pelatihList as $pelatih)
+            <div class="card" @click="showForm = 'pelatih{{ $pelatih->id }}'">
+              <div class="name">{{ $pelatih->name }}</div>
+              <div class="role">Pelatih</div>
+              <div class="cabang">Cabang: {{ $pelatih->cabang_eskul }}</div>
             </div>
+          @empty
+            <div class="empty">Belum ada pelatih di cabang ini.</div>
+          @endforelse
+        </div>
+      </div>
 
-            <!-- Script Chart.js -->
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-                // Guru chart
-                new Chart(document.getElementById('chartGuru'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Izin', 'Tidak Izin'],
-                        datasets: [{
-                            data: [{{ $guruIzin }}, {{ $totalGuru - $guruIzin }}],
-                            backgroundColor: ['#f87171', '#60a5fa']
-                        }]
-                    }
-                });
+      <!-- Ketua -->
+      <div class="section-container">
+        <div class="section-title">Ketua Eskul</div>
+        <div class="grid">
+          @forelse ($ketuaList as $ketua)
+            <div class="card" @click="showForm = 'ketua{{ $ketua->id }}'">
+              <div class="name">{{ $ketua->name }}</div>
+              <div class="role">Ketua Eskul</div>
+              <div class="cabang">Cabang: {{ $ketua->cabang_eskul }}</div>
+            </div>
+          @empty
+            <div class="empty">Belum ada ketua di cabang ini.</div>
+          @endforelse
+        </div>
+      </div>
 
-                // Siswa chart
-                new Chart(document.getElementById('chartSiswa'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Izin', 'Tidak Izin'],
-                        datasets: [{
-                            data: [{{ $siswaIzin }}, {{ $totalSiswa - $siswaIzin }}],
-                            backgroundColor: ['#34d399', '#a78bfa']
-                        }]
-                    }
-                });
-            </script>
-        @endif
+    </div>
+  </div>
+</div>
+@endif
+
+    @if (Auth::user()->role != 'siswa' && Auth::user()->role != 'ketua_eskul' && Auth::user()->role != "kesiswaan" && Auth::user()->role != "pembina")
+<?php 
+
+// Total murid/guru
+$totalSiswa = User::where('role','siswa')->count();
+$totalGuru  = User::where('role','guru')->count();
+
+// Ambil jumlah siswa/guru yang izin dari Absensi
+$siswaIzin = Absensi::where('role','siswa')
+    ->whereNotNull('alasan_izin')->get();
+
+$guruIzin = Absensi::where('role','guru')
+    ->whereNotNull('alasan_izin')->get();
+?>
+
+<div class="flex gap-6 mb-9">
+
+    {{-- Left: Siswa --}}
+    <div class="w-1/2 bg-white p-4 rounded shadow">
+        <h2 class="text-xl font-semibold mb-4">Siswa</h2>
+        <div>
+            <canvas id="siswaChart"></canvas>
+        </div>
+
+        <h3 class="font-semibold mt-6 mb-2">List Siswa yang Izin:</h3>
+        <div class="max-h-64 overflow-auto border p-2 rounded">
+<div class="grid grid-cols-1 gap-4">
+    @foreach($siswaIzin as $siswa)
+        <div class="bg-blue-100 border-l-4 border-blue-500 p-4 rounded shadow">
+            <div class="flex justify-between mb-2">
+                <span class="font-semibold text-blue-800">NIP/NIS: {{ $siswa->identity }}</span>
+                <span class="text-sm text-blue-700">{{ $siswa->kelas }}</span>
+            </div>
+            <div class="mb-1">
+                <span class="font-semibold text-blue-800">Nama:</span> {{ $siswa->name ?? 'Unknown' }}
+            </div>
+            @if(!empty($siswa->mata_pelajaran))
+            <div class="mb-1">
+                <span class="font-semibold text-blue-800">Mata Pelajaran:</span> {{ $siswa->mata_pelajaran }}
+            </div>
+            @endif
+            @if(!empty($siswa->jam_pelajaran))
+            <div class="mb-1">
+                <span class="font-semibold text-blue-800">Jam Pelajaran:</span> {{ $siswa->jam_pelajaran }}
+            </div>
+            @endif
+            <div class="mt-2 p-2 bg-blue-200 rounded">
+                <span class="font-semibold text-blue-900">Alasan Izin:</span> {{ $siswa->alasan_izin }}
+            </div>
+        </div>
+    @endforeach
+</div>
+
+        </div>
+    </div>
+
+    {{-- Right: Guru --}}
+    <div class="w-1/2 bg-white p-4 rounded shadow">
+        <h2 class="text-xl font-semibold mb-4">Guru</h2>
+        <div>
+            <canvas id="guruChart"></canvas>
+        </div>
+
+        <h3 class="font-semibold mt-6 mb-2">List Guru yang Izin:</h3>
+        <div class="max-h-64 overflow-auto border p-2 rounded">
+            @foreach($guruIzin as $guru)
+                <div class="mb-1">{{ $guru->user->name ?? 'Unknown' }} - {{ $guru->alasan_izin }}</div>
+            @endforeach
+        </div>
+    </div>
+
+</div>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Ekstrakurikuler</title>
+  <style>
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background: #f2f6fc;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 40px auto;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 30px;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      border-radius: 14px;
+      width: 240px;
+      padding: 25px 20px;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.6);
+    }
+
+    .card .name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card .desc {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+@if (Auth::user()->role == "admin")
+  <!-- Flex Card Container -->
+        <center><h1 class="title">Daftar Ekstrakurikuler</h1></center>
+    <div class="flex flex-wrap justify-center gap-6">
+      @foreach ($eskulList as $eskul)
+      <a href="/eskul?cabang={{ $eskul->cabang_eskul }}">
+        <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl shadow-lg w-60 p-5 text-center cursor-pointer hover:scale-105 transition">
+          <div class="text-lg font-semibold mb-1">{{ $eskul->cabang_eskul }}</div>
+        </div>
+      </a>
+      @endforeach
+    </div>
+</body>
+</html>
+@endif
+
+{{-- Chart.js Script --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const siswaCtx = document.getElementById('siswaChart').getContext('2d');
+    const guruCtx  = document.getElementById('guruChart').getContext('2d');
+
+    new Chart(siswaCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Siswa','Siswa Izin'],
+            datasets: [{
+                label: 'Jumlah',
+                data: [{{ $totalSiswa }}, {{ $siswaIzin->count() }}],
+                backgroundColor: ['#3b82f6','#93c5fd']
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    new Chart(guruCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Guru','Guru Izin'],
+            datasets: [{
+                label: 'Jumlah',
+                data: [{{ $totalGuru }}, {{ $guruIzin->count() }}],
+                backgroundColor: ['#f59e0b','#fde68a']
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+</script>
     @endif
             {{-- Siswa --}}
             @if (Auth::user()->role == 'siswa')
@@ -496,6 +925,157 @@ $cabangList = Eskul::query()->get();
                 </div>
                 @endif
         </div>
+
+
+<!-- Tambahkan Daftar Eskul oleh Kesiswaan -->
+<div x-show="showForm === 'lihatcabangEskul'" class="p-4">
+
+<div x-data="{
+    search: '',
+    results: [],
+    eskulData: @js($eskulList),
+    searchEskul() {
+        const query = this.search.toLowerCase();
+        if (!query) {
+            this.results = [];
+            return;
+        }
+
+        // Filter eskul berdasarkan nama (max 3 hasil)
+        this.results = this.eskulData
+            .filter(item => item.cabang_eskul.toLowerCase().includes(query))
+            .slice(0, 3);
+    }
+}">
+    <h1 class="text-2xl font-bold mb-6 text-gray-800">Cari & Update Jadwal Eskul</h1>
+
+    {{-- Input Pencarian --}}
+    <div class="mb-6">
+        <x-input-label for="search" :value="__('Cari Eskul')" />
+        <x-text-input id="search" class="block mt-1 w-full"
+            type="text" x-model="search" x-on:input.debounce.300ms="searchEskul()"
+            placeholder="Ketik nama cabang eskul..." autocomplete="off" />
+    </div>
+
+    {{-- Hasil Pencarian --}}
+    <template x-if="results.length > 0">
+        <div>
+            <template x-for="eskul in results" :key="eskul.id">
+                <div class="bg-white shadow p-4 rounded-lg mb-4 border border-gray-200">
+                    <form method="POST" :action="`/updateeskul/${eskul.id}`">
+                        @csrf
+                        {{-- kalau mau RESTful, bisa pakai @method('PUT') --}}
+                        {{-- @method('PUT') --}}
+
+                        {{-- Cabang Eskul --}}
+                        <div class="mb-3">
+                            <x-input-label :value="__('Cabang Eskul')" />
+                            <x-text-input class="block w-full mt-1" type="text"
+                                name="cabang_eskul" x-model="eskul.cabang_eskul" required />
+                        </div>
+
+                        {{-- Hari --}}
+                        <div class="mb-3">
+                            <x-input-label :value="__('Hari')" />
+                            <select name="hari" x-model="eskul.hari"
+                                class="block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
+                                <option value="">Pilih Hari</option>
+                                <template x-for="hari in ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']">
+                                    <option :value="hari.toLowerCase()" x-text="hari"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        {{-- Waktu --}}
+                        <div class="mb-3">
+                            <x-text-input type="time" name="waktu" required />
+                        </div>
+
+                        {{-- Tempat --}}
+                        <div class="mb-4">
+                            <x-input-label :value="__('Tempat')" />
+                            <x-text-input class="block w-full mt-1" type="text"
+                                name="tempat" x-model="eskul.tempat" required />
+                        </div>
+
+                        {{-- Tombol Submit --}}
+                        <div class="flex justify-end">
+                            <x-primary-button>Update</x-primary-button>
+                        </div>
+                    </form>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    {{-- Jika tidak ada hasil --}}
+    <template x-if="search && results.length === 0">
+        <p class="text-gray-500 mt-4">Tidak ada hasil untuk pencarian tersebut.</p>
+    </template>
+</div>
+
+
+
+<div class="flex-1">
+    <form method="POST" action="{{ route('addeskul') }}">
+        @csrf
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">Tambah Jadwal Ekstrakurikuler</h1>
+
+        {{-- Cabang Eskul --}}
+        <div class="mb-4">
+            <x-input-label for="cabang_eskul" :value="__('Cabang Eskul')" />
+            <x-text-input id="cabang_eskul" class="block mt-1 w-full" type="text" name="cabang_eskul"
+                :value="old('cabang_eskul')" required autofocus autocomplete="off"
+                placeholder="Contoh: Basket, Pramuka, Tari" />
+            <x-input-error :messages="$errors->get('cabang_eskul')" class="mt-2" />
+        </div>
+
+        {{-- Hari --}}
+        <div class="mb-4">
+            <x-input-label for="hari" :value="__('Hari')" />
+            <select id="hari" name="hari" required
+                class="block mt-1 w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm">
+                <option value="">Pilih Hari</option>
+                @php
+                    $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                @endphp
+                @foreach ($hariList as $hari)
+                    <option value="{{ strtolower($hari) }}" {{ old('hari') === strtolower($hari) ? 'selected' : '' }}>
+                        {{ $hari }}
+                    </option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('hari')" class="mt-2" />
+        </div>
+
+        {{-- Waktu --}}
+        <div class="mb-4">
+            <x-input-label for="waktu" :value="__('Waktu')" />
+            <x-text-input id="waktu" class="block mt-1 w-full" type="text" name="waktu"
+                :value="old('waktu')" required autocomplete="off"
+                placeholder="Contoh: 15.00 - 17.00" />
+            <x-input-error :messages="$errors->get('waktu')" class="mt-2" />
+        </div>
+
+        {{-- Tempat --}}
+        <div class="mb-6">
+            <x-input-label for="tempat" :value="__('Tempat')" />
+            <x-text-input id="tempat" class="block mt-1 w-full" type="text" name="tempat"
+                :value="old('tempat')" required autocomplete="off"
+                placeholder="Contoh: Lapangan Basket, Aula, Ruang Musik" />
+            <x-input-error :messages="$errors->get('tempat')" class="mt-2" />
+        </div>
+
+        {{-- Tombol Submit --}}
+        <div class="flex items-center justify-end">
+            <x-primary-button>
+                {{ __('Tambah Jadwal') }}
+            </x-primary-button>
+        </div>
+    </form>
+</div>
+
+</div>
 
             <!-- Daftar Guru dalam Bentuk Card -->
 <div x-show="showForm === 'lihatGuru'" x-transition class="bg-white p-6 rounded-xl shadow max-w-6xl mt-6 flex gap-6">
@@ -993,10 +1573,7 @@ $cabangList = Eskul::query()->get();
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Cabang Eskul</label>
                 <select name="cabang_eskul" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                  <option value="">-- Pilih Cabang --</option>
-                  @foreach ($cabangList as $cabang)
-                    <option value="{{ $cabang }}">{{ $cabang }}</option>
-                  @endforeach
+                  <option value="{{ Auth::user()->cabang_eskul }}">{{ Auth::user()->cabang_eskul }}</option>
                 </select>
               </div>
 
@@ -1108,12 +1685,7 @@ $cabangList = Eskul::query()->get();
                 <x-input-label for="cabang_eskul" :value="__('Cabang Eskul')" />
                 <select id="cabang_eskul" name="cabang_eskul"
                     class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm">
-                    <option value="">Pilih Cabang</option>
-                    @foreach ($cabangList as $cabang)
-                        <option value="{{ $cabang }}" {{ old('cabang_eskul') === $cabang ? 'selected' : '' }}>
-                            {{ $cabang }}
-                        </option>
-                    @endforeach
+                    <option value="{{ Auth::user()->cabang_eskul }}">{{ Auth::user()->cabang_eskul }}</option>
                 </select>
                 <x-input-error :messages="$errors->get('cabang_eskul')" class="mt-2" />
             </div>

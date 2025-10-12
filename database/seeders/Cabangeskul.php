@@ -18,7 +18,9 @@ public function run()
     foreach ($cabangs as $cabang) {
         Eskul::create([
             'cabang_eskul' => $cabang,
-            'hari_1' => 'senin',
+            'hari' => 'senin',
+            'waktu' => '12:00',
+            'tempat' => 'sekolah'
         ]);
     }
 }
