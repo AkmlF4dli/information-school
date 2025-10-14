@@ -79,9 +79,9 @@ Pastikan sudah menginstal:
    ```bash
    git clone https://github.com/AkmlF4dli/information-school.git
    cd information-school
-   docker-compose build --no-cache
    mv .env.sample .env
    rm -rf public/storage
+   docker-compose build --no-cache
    docker-compose up -d
    docker-compose exec app rm -rf public/storage
    docker-compose exec app composer update
