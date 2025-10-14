@@ -1,0 +1,48 @@
+version: "3.7"
+services:
+
+  # 1. LAYANAN DATABASE (MariaDB)
+  db:
+    image: mariadb:10.6 # Versi stabil MariaDB
+    environment:
+      # Ambil nilai dari file .env host
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD} 
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql # Persistensi data
+    ports:
+      - "3306:3306" # Opsional, untuk akses dari luar container
+
+  # 2. LAYANAN APLIKASI (Laravel + PHP 8.2 FPM)
+  app:
+    build:
+      context: . # Gunakan Dockerfile yang ada di folder ini
+      dockerfile: Dockerfile
+    volumes:
+      - .:/var/www/html # Mounting kode untuk pengembangan (opsional untuk production murni)
+    environment:
+      # Pastikan file .env Laravel menunjuk ke service name 'db'
+      DB_HOST: db 
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - db
+
+  # 3. LAYANAN WEB SERVER (Nginx)
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80" # Akses aplikasi dari port 80 host
+    volumes:
+      # Mounting kode dan konfigurasi Nginx kustom
+      - .:/var/www/html
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      - ./storage/app/public:/var/www/html/public/storage
+    depends_on:
+      - app
+
+volumes:
+  mariadb_data:
