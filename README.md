@@ -74,8 +74,6 @@ Pastikan sudah menginstal:
 ---
 
 ### 🧭 Langkah Deploy
-
-1. **Clone Repository**
    ```bash
    git clone https://github.com/AkmlF4dli/information-school.git
    cd information-school
