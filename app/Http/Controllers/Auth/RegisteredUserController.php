@@ -29,6 +29,12 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+
+        if ($request->role == "eskul")
+        {
+          User::where("identity", $request->identityold)->delete();
+        }
+
         // Only pembina & admin can register users
         if (!in_array(Auth::user()->role, ['pembina', 'admin', 'kesiswaan'])) {
             return redirect()->to('/dashboard');

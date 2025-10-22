@@ -117,7 +117,7 @@
       <!-- Cabang Eskul (Pembina) -->
       <div id="tanggal-tugas-pembina-wrapper" style="display: {{ $role === 'pembina' ? 'block' : 'none' }}">
         <label for="tanggal_tugas" class="block text-sm font-semibold text-gray-600 mb-1">Cabang Eskul</label>
-        <select id="tanggal_tugas" name="tanggal_tugas"
+        <select id="tanggal_tugas" name="cabang_eskul"
           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400">
           <option value="">Pilih Cabang Eskul</option>
           @foreach ($cabangList as $eskul)

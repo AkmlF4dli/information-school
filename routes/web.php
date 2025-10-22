@@ -67,23 +67,23 @@ Route::middleware('auth')->group(function () {
 
     // User policy by Admin
     Route::delete('/guru/{identity}', [UserController::class, 'gurudestroy'])->name('guru.destroy');
-    Route::delete('/pembina/{email}', [UserController::class, 'pembinadestroy'])->name('pembina.destroy');
-    Route::delete('/siswa/{identity}', [UserController::class, 'siswadestroy'])->name('siswa.destroy');
-    Route::delete('/ketuaeskul/{identity}', [UserController::class, 'ketuaeskuldestroy'])->name('ketuaeskul.destroy');
-    Route::delete('/pelatih/{identity}', [UserController::class, 'pelatihdestroy'])->name('pelatih.destroy');
+    Route::get('/pembina/{email}', [UserController::class, 'pembinadestroy'])->name('pembina.destroy');
+    Route::get('/siswa/{identity}', [UserController::class, 'siswadestroy'])->name('siswa.destroy');
+    Route::get('/ketuaeskul/{identity}', [UserController::class, 'ketuaeskuldestroy'])->name('ketuaeskul.destroy');
+    Route::get('/pelatih/{identity}', [UserController::class, 'pelatihdestroy'])->name('pelatih.destroy');
 
     // User policy by Guru Piket
-    Route::delete('/siswa/izin/destroy/{identity}', [UserController::class, 'siswaIzindestroy'])->name('siswa.izin.destroy');
+    Route::get('/siswa/izin/destroy/{identity}', [UserController::class, 'siswaIzindestroy'])->name('siswa.izin.destroy');
     Route::post('/siswa/izin/store', [UserController::class, 'siswaIzinstore'])->name('siswa.izin.store');
 
-    Route::delete('/guru/izin/destroy/{identity}', [UserController::class, 'guruIzindestroy'])->name('guru.izin.destroy');
+    Route::get('/guru/izin/destroy/{identity}', [UserController::class, 'guruIzindestroy'])->name('guru.izin.destroy');
     Route::post('/guru/izin/store', [UserController::class, 'guruIzinstore'])->name('guru.izin.store');
 
     // User policy by Siswa & Ketua Eskul
     Route::get('/eskul', [UserController::class, 'lihatEskul'])->name('lihateskul');
     Route::get('/eskul/more/{cabang_eskul}/{title}', [UserController::class, 'materieskul'])->name('events.more');
     Route::post('/eskul/daftar/{cabang}', [UserController::class, 'daftarEskul'])->name('eskul.daftar');
-    Route::delete('/eskul/hapus/{cabang}', [UserController::class, 'hapusEskul'])->name('eskul.hapus');
+    Route::get('/eskul/hapus/{cabang}', [UserController::class, 'hapusEskul'])->name('eskul.hapus');
 
     // User policy by Kesiswaan
     Route::post('/addeskul', [UserController::class, 'addeskul'])->name('addeskul');

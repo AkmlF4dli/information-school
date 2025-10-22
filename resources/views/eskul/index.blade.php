@@ -75,7 +75,7 @@ $pelatihList = User::where('role', 'eskul')
                     ->where('cabang_eskul', $currentCabang)
                     ->get();
 
-$ketuaList = User::where('role', 'ketua_eskul')
+$pembinaList = User::where('role', 'pembina')
                   ->where('cabang_eskul', $currentCabang)
                   ->get();
 ?>
@@ -241,30 +241,30 @@ $ketuaList = User::where('role', 'ketua_eskul')
       <div class="section-container">
         <div class="section-title">Pelatih Eskul</div>
         <div class="grid">
-          @forelse ($pelatihList as $pelatih)
-            <div class="card" @click="showForm = 'pelatih{{ $pelatih->id }}'">
-              <div class="name">{{ $pelatih->name }}</div>
-              <div class="role">Pelatih</div>
-              <div class="cabang">Cabang: {{ $pelatih->cabang_eskul }}</div>
+          @forelse ($pembinaList as $pembina)
+            <div class="card" @click="showForm = 'pelatih{{ $pembina->id }}'">
+              <div class="name">{{ $pembina->name }}</div>
+              <div class="role">Pembina</div>
+              <div class="cabang">Cabang: {{ $pembina->cabang_eskul }}</div>
             </div>
           @empty
-            <div class="empty">Belum ada pelatih di cabang ini.</div>
+            <div class="empty">Belum ada pembina di cabang ini.</div>
           @endforelse
         </div>
       </div>
 
       <!-- Ketua -->
       <div class="section-container">
-        <div class="section-title">Ketua Eskul</div>
+        <div class="section-title">Pelatih Eskul</div>
         <div class="grid">
-          @forelse ($ketuaList as $ketua)
-            <div class="card" @click="showForm = 'ketua{{ $ketua->id }}'">
-              <div class="name">{{ $ketua->name }}</div>
-              <div class="role">Ketua Eskul</div>
-              <div class="cabang">Cabang: {{ $ketua->cabang_eskul }}</div>
+          @forelse ($pelatihList as $pelatih)
+            <div class="card" @click="showForm = 'ketua{{ $pelatih->id }}'">
+              <div class="name">{{ $pelatih->name }}</div>
+              <div class="role">Pelatih Eskul</div>
+              <div class="cabang">Cabang: {{ $pelatih->cabang_eskul }}</div>
             </div>
           @empty
-            <div class="empty">Belum ada ketua di cabang ini.</div>
+            <div class="empty">Belum ada pelatih di cabang ini.</div>
           @endforelse
         </div>
       </div>

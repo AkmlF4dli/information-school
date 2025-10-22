@@ -30,7 +30,7 @@ class UpdateUserController extends Controller
                 'email'         => ['required', 'email', 'max:255'],
                 'role'          => ['required', 'string'],
                 'cabang_eskul'  => ['nullable', 'string', 'max:255'],
-                'tanggal_tugas' => ['nullable', 'string'],
+                'tanggal_tugas' => ['nullable', 'required_if:role,guru', 'string'],
             ]);
         } elseif (Auth::user()->role == "pembina") {
             $rules = [

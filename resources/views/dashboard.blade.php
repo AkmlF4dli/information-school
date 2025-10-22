@@ -283,29 +283,27 @@ $eskulList = Eskul::all();
                 </button>
 
                 {{-- Menu Admin --}}
-                @if (Auth::user()->role == 'kesiswaan')
+                @if (Auth::user()->role == 'admin')
                     <button
                         @click="showForm = 'lihatPembina'"
                         class="px-4 py-2 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold">
-                        Lihat Pembina Eskul
+                        Pembina Eskul
                     </button>
                     <button
                         @click="showForm = 'lihatcabangEskul'"
                         class="px-4 py-2 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold">
-                        Lihat Eskul
+                        Cabang Eskul
                     </button>
-                @endif
-                @if (Auth::user()->role == 'admin')
                     <button
                         @click="showForm = 'lihatGuru'"
                         class="px-4 py-2 rounded-md bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold">
-                        Lihat Guru Piket
+                        Guru Piket
                     </button>
 
                     <button
                         @click="showForm = 'lihatSiswa'"
                         class="px-4 py-2 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold">
-                        Lihat Siswa
+                        Siswa
                     </button>
                 @endif
 
@@ -315,12 +313,6 @@ $eskulList = Eskul::all();
                         @click="showForm = 'lihatEskul'"
                         class="px-4 py-2 rounded-md bg-purple-100 hover:bg-purple-200 text-purple-800 font-semibold">
                         Lihat Pelatih Eskul
-                    </button>
-                    
-                    <button
-                        @click="showForm = 'lihatKetuaEskul'"
-                        class="px-4 py-2 rounded-md bg-pink-100 hover:bg-pink-200 text-pink-800 font-semibold">
-                        Lihat Ketua Eskul
                     </button>
                 @endif
 
@@ -472,7 +464,7 @@ $pelatihList = User::where('role', 'eskul')
                     ->where('cabang_eskul', $currentCabang)
                     ->get();
 
-$ketuaList = User::where('role', 'ketua_eskul')
+$pembinaList = User::where('role', 'pembina')
                   ->where('cabang_eskul', $currentCabang)
                   ->get();
 ?>
@@ -616,8 +608,8 @@ $ketuaList = User::where('role', 'ketua_eskul')
       <div class="jadwal-container">
         <div class="jadwal-title">Jadwal {{ $jadwal->cabang_eskul }}</div>
         <div class="jadwal-info">
-          @if (!empty($jadwal->hari_1))
-            <div>🗓 <strong>{{ $jadwal->hari_1 }}</strong></div>
+          @if (!empty($jadwal->hari))
+            <div>🗓 <strong>{{ $jadwal->hari }}</strong></div>
           @endif
           @if (!empty($jadwal->waktu))
             <div>⏰ <strong>{{ $jadwal->waktu }}</strong></div>
@@ -634,34 +626,32 @@ $ketuaList = User::where('role', 'ketua_eskul')
     <!-- Pelatih & Ketua Section -->
     <div class="flex-container">
       
+      <!-- Pembina -->
+      <div class="section-container">
+        <div class="section-title">Pembina Eskul</div>
+        <div class="grid">
+          @forelse ($pembinaList as $pembina)
+            <div class="card">
+              <div class="name">{{ $pembina->name }}</div>
+              <div class="cabang">Cabang: {{ $pembina->cabang_eskul }}</div>
+            </div>
+          @empty
+            <div class="empty">Belum ada pembina di cabang ini.</div>
+          @endforelse
+        </div>
+      </div>
+
       <!-- Pelatih -->
       <div class="section-container">
         <div class="section-title">Pelatih Eskul</div>
         <div class="grid">
           @forelse ($pelatihList as $pelatih)
-            <div class="card" @click="showForm = 'pelatih{{ $pelatih->id }}'">
+            <div class="card">
               <div class="name">{{ $pelatih->name }}</div>
-              <div class="role">Pelatih</div>
               <div class="cabang">Cabang: {{ $pelatih->cabang_eskul }}</div>
             </div>
           @empty
             <div class="empty">Belum ada pelatih di cabang ini.</div>
-          @endforelse
-        </div>
-      </div>
-
-      <!-- Ketua -->
-      <div class="section-container">
-        <div class="section-title">Ketua Eskul</div>
-        <div class="grid">
-          @forelse ($ketuaList as $ketua)
-            <div class="card" @click="showForm = 'ketua{{ $ketua->id }}'">
-              <div class="name">{{ $ketua->name }}</div>
-              <div class="role">Ketua Eskul</div>
-              <div class="cabang">Cabang: {{ $ketua->cabang_eskul }}</div>
-            </div>
-          @empty
-            <div class="empty">Belum ada ketua di cabang ini.</div>
           @endforelse
         </div>
       </div>
@@ -685,6 +675,9 @@ $siswaIzin = Absensi::where('role','siswa')
 $guruIzin = Absensi::where('role','guru')
     ->whereNotNull('alasan_izin')->get();
 ?>
+
+
+@if(Auth::user()->role == "admin" or Auth::user()->role == "guru")
 
 <div class="flex gap-6 mb-9">
 
@@ -743,6 +736,8 @@ $guruIzin = Absensi::where('role','guru')
     </div>
 
 </div>
+
+@endif
 
 <!DOCTYPE html>
 <html lang="id">
@@ -830,6 +825,7 @@ $guruIzin = Absensi::where('role','guru')
 </body>
 </html>
 @endif
+
 
 {{-- Chart.js Script --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1645,7 +1641,92 @@ $guruIzin = Absensi::where('role','guru')
     <div class="flex-1">
         <form method="POST" action="{{ route('register') }}">
             @csrf
-            <h1 class="text-2xl font-bold mb-6 text-gray-800">Tambah Pelatih Baru</h1>
+
+            @php
+              $pelatihs = \App\Models\User::where('role', 'eskul')->get();
+            @endphp
+
+            @if ($pelatihs->count())
+            <h1 class="text-2xl font-bold mb-6 text-gray-800">Edit Pelatih</h1>
+
+            @foreach ($pelatihs as $pelatih)
+            <!-- Identity -->
+
+            <div class="mb-4 hidden">
+                <x-input-label for="identity" :value="__('NIP/Nomor Telp')" />
+                <x-text-input id="identity" class="block mt-1 w-full" type="number" name="identityold"
+                    value="{{ $pelatih->identity }}" required autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            </div>
+
+            <div class="mb-4">
+                <x-input-label for="identity" :value="__('NIP/Nomor Telp')" />
+                <x-text-input id="identity" class="block mt-1 w-full" type="number" name="identity"
+                    value="{{ $pelatih->identity }}" required autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            </div>
+
+            <!-- Full Name -->
+            <div class="mb-4">
+                <x-input-label for="name" :value="__('Full Name')" />
+                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name"
+                    value="{{ $pelatih->name }}" required autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            </div>
+
+            <!-- Email -->
+            <div class="mb-4">
+                <x-input-label for="email" :value="__('Email')" />
+                <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+                    value="{{ $pelatih->email }}" required />
+                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            </div>
+
+            <!-- Role -->
+            <div class="mb-4 hidden">
+                <x-input-label for="role" :value="__('Role')" />
+                <select id="role" name="role" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                    <option value="eskul" selected>Pelatih Eskul</option>
+                </select>
+                <x-input-error :messages="$errors->get('role')" class="mt-2" />
+            </div>
+
+            <!-- Cabang Eskul -->
+            <div class="mb-4">
+                <x-input-label for="cabang_eskul" :value="__('Cabang Eskul')" />
+                <select id="cabang_eskul" name="cabang_eskul"
+                    class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm">
+                    <option value="{{ Auth::user()->cabang_eskul }}">{{ Auth::user()->cabang_eskul }}</option>
+                </select>
+                <x-input-error :messages="$errors->get('cabang_eskul')" class="mt-2" />
+            </div>
+
+            <!-- Password -->
+            <div class="mb-4">
+                <x-text-input id="password" class="block mt-1 w-full" type="hidden" name="password"
+                    required autocomplete="new-password" value="smkn8jakarta" />
+                <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            </div>
+
+            <div class="mb-6">
+                <x-text-input id="password_confirmation" class="block mt-1 w-full" type="hidden" value="smkn8jakarta"                   name="password_confirmation" required />
+                <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center" style="display: flex; justify-content: space-around;">
+                <x-primary-button>
+                    {{ __('Edit') }}
+                </x-primary-button>
+            </div>
+        </form>
+                <a href="/pelatih/{{ $pelatih->identity }}"><x-primary-button>
+                    {{ __('Delete') }}
+                </x-primary-button></a>
+    </div>
+  @endforeach
+            @else
+            <h1 class="text-2xl font-bold mb-6 text-gray-800">Tambah Pelatih</h1>
 
             <!-- Identity -->
             <div class="mb-4">
@@ -1710,55 +1791,7 @@ $guruIzin = Absensi::where('role','guru')
             </div>
         </form>
     </div>
-
-    <!-- Daftar Pelatih -->
-    <div class="flex-1">
-        <h2 class="text-xl font-bold mb-6 text-gray-800">Daftar Pelatih Ekstrakurikuler</h2>
-
-        @php
-            $pelatihs = \App\Models\User::where('role', 'eskul')->get();
-        @endphp
-
-        @if ($pelatihs->count())
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                @foreach ($pelatihs as $pelatih)
-                    <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 shadow hover:shadow-lg transition relative">
-                        <div class="text-lg font-semibold text-gray-800">{{ $pelatih->name }}</div>
-                        <div class="text-sm text-gray-600">{{ $pelatih->email }}</div>
-                        <div class="text-sm text-purple-700">
-                            Cabang: {{ $pelatih->cabang_eskul ?? '-' }}
-                        </div>
-
-                        <!-- Edit -->
-                        <form method="GET" action="{{ route('user.edit') }}" class="mt-4 inline-block">
-                            <input type="hidden" name="id" value="{{ $pelatih->id }}">
-                            <input type="hidden" name="identity" value="{{ $pelatih->identity }}">
-                            <input type="hidden" name="name" value="{{ $pelatih->name }}">
-                            <input type="hidden" name="email" value="{{ $pelatih->email }}">
-                            <input type="hidden" name="role" value="{{ $pelatih->role }}">
-                            <input type="hidden" name="cabang_eskul" value="{{ $pelatih->cabang_eskul }}">
-                        </form>
-
-                        <!-- Delete -->
-                        <form action="{{ route('pelatih.destroy', $pelatih->email) }}" method="POST"
-                              onsubmit="return confirm('Yakin ingin menghapus pelatih ini?');"
-                              class="mt-2 inline-block">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                class="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded">
-                                Delete
-                            </button>
-                        </form>
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <p class="text-gray-600">Belum ada pelatih ekstrakurikuler yang terdaftar.</p>
-        @endif
-    </div>
-</div>
-
+            @endif
 <!-- Halaman Untuk Guru Piket -->
 
 @php

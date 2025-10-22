@@ -101,15 +101,14 @@ public function ketuaeskuldestroy($id)
     ]);
 }
 
-    public function pelatihdestroy($email)
+    public function pelatihdestroy($identity)
     {
         if (Auth::user()->role == 'pembina'){
-        $guru = User::where('email', $email);
-        $guru->delete();
+        $guru = User::where('identity', $identity)->delete();
         
         return redirect()->back()->with('notification', [
         'type' => 'success',
-        'message' => 'Guru berhasil dihapus'
+        'message' => 'Pelatih berhasil dihapus'
         ]);
         }
         else{
@@ -380,7 +379,7 @@ public function hapusEskul($cabang)
 
 public function addeskul(Request $request)
 {
-    if (Auth::user()->role == "kesiswaan") {
+    if (Auth::user()->role == "admin") {
         $request->validate([
             'cabang_eskul' => 'required|string|max:255',
             'hari' => 'required|string|max:255',
@@ -401,7 +400,7 @@ public function addeskul(Request $request)
 
 public function updateeskul(Request $request, $id)
 {
-    if (Auth::user()->role == "kesiswaan") {
+    if (Auth::user()->role == "admin") {
         $request->validate([
             'cabang_eskul' => 'required|string|max:255',
             'hari' => 'required|string|max:255',
