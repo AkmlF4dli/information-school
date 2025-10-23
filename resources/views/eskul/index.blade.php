@@ -239,12 +239,12 @@ $pembinaList = User::where('role', 'pembina')
       
       <!-- Pelatih -->
       <div class="section-container">
-        <div class="section-title">Pelatih Eskul</div>
+        <div class="section-title">Pembina Eskul</div>
         <div class="grid">
           @forelse ($pembinaList as $pembina)
             <div class="card" @click="showForm = 'pelatih{{ $pembina->id }}'">
               <div class="name">{{ $pembina->name }}</div>
-              <div class="role">Pembina</div>
+              <div class="role">Pembina Eskul</div>
               <div class="cabang">Cabang: {{ $pembina->cabang_eskul }}</div>
             </div>
           @empty

@@ -30,6 +30,17 @@ class AbsensiController extends Controller
             'role' => ['required', 'string', 'max:255'],
         ]);
 
+        if (isset(Auth::user()->tanggal_tugas)){
+         Absensi::create([
+            'identity' => $request->identity,
+            'name' => $request->name,
+            'kelas' => $request->kelas,
+            'jurusan' => $request->jurusan,
+            'role' => $request->role,
+            'tanggal_tugas' => Auth::user()->tanggal_tugas,
+         ]);
+        }
+        else{
         Absensi::create([
             'identity' => $request->identity,
             'name' => $request->name,
@@ -37,6 +48,7 @@ class AbsensiController extends Controller
             'jurusan' => $request->jurusan,
             'role' => $request->role,
         ]);
+        }
 
         return redirect()->to('/dashboard')->with('notification', [
         'type' => 'success',

@@ -8,10 +8,47 @@ use App\Models\Eskul;
 use App\Models\Events;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+
+    public function index(Request $request)
+    {
+        // ✅ Validate the input (optional but recommended)
+        $validated = $request->validate([
+            'tanggal' => ['nullable', 'date'],
+        ]);
+
+        // Ambil tanggal dari input atau default hari ini
+        $tanggal = $validated['tanggal'] ?? now()->toDateString();
+
+        // Total siswa & guru
+        $totalSiswa = User::where('role', 'siswa')->count();
+        $totalGuru  = User::where('role', 'guru')->count();
+
+        // Data izin berdasarkan tanggal
+        $siswaIzin = Absensi::where('role', 'siswa')
+            ->whereNotNull('alasan_izin')
+            ->whereDate('created_at', $tanggal)
+            ->get();
+
+        $guruIzin = Absensi::where('role', 'guru')
+            ->whereNotNull('alasan_izin')
+            ->whereDate('created_at', $tanggal)
+            ->get();
+
+        // Kirim ke view
+        return view('dashboard', compact(
+            'tanggal',
+            'totalSiswa',
+            'totalGuru',
+            'siswaIzin',
+            'guruIzin'
+        ));
+    }
+
     // Authorize by Admin
     public function gurudestroy($id)
     {
@@ -341,8 +378,6 @@ public function hapusEskul($cabang)
 }
 
 
-
-
     // Authorize by Pelatih
 
      public function storemateri(Request $request)
@@ -385,7 +420,37 @@ public function addeskul(Request $request)
             'hari' => 'required|string|max:255',
             'waktu' => 'required|date_format:H:i',
             'tempat' => 'required|string|max:255',
+            'identity' => 'required|integer',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|max:255',
+            'password' => 'required|string|max:255',
+            'role' => 'required|string|max:255',
+            'identitydua' => 'required|integer',
+            'namedua' => 'required|string|max:255',
+            'emaildua' => 'required|string|max:255',
+            'passworddua' => 'required|string|max:255',
+            'roledua' => 'required|string|max:255',
         ]);
+
+
+        if ($request->identity == $request->identitydua)
+        {
+            if ($request->name == $request->namedua)
+            {
+                if ($request->email == $request->emaildua)
+                {
+                   return $this->errorRedirect();
+                }
+            }
+        }
+
+        $check = User::where('identity', $request->identity)->where('name', $request->name)->where('email', $request->email)->exists();
+
+        $check2 = User::where('identity', $request->identity2)->where('name', $request->name2)->where('email', $request->email2)->exists();
+
+        if ($check && $check2){
+            return $this->errorRedirect();
+        }
 
         Eskul::create([
             'cabang_eskul' => $request->cabang_eskul,
@@ -394,20 +459,58 @@ public function addeskul(Request $request)
             'tempat' => $request->tempat,
         ]);
 
+        User::create([
+            'picture' => '/storage/profile/profile.jpg',
+            'identity' => $request->identity,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'cabang_eskul' => $request->cabang_eskul,
+        ]);
+
+        User::create([
+            'picture' => '/storage/profile/profile.jpg',
+            'identity' => $request->identitydua,
+            'name' => $request->namedua,
+            'email' => $request->emaildua,
+            'password' => Hash::make($request->passworddua),
+            'role' => $request->roledua,
+            'cabang_eskul' => $request->cabang_eskul,
+        ]);
+
         return $this->successRedirect();
+    }
+}
+
+public function deleteeskul(Request $request, $eskul)
+{
+    if (Auth::user()->role == "admin")
+    {
+      if (isset($eskul))
+      {
+        Eskul::where('cabang_eskul', $eskul)->delete();
+        User::where('cabang_eskul', $eskul)->delete();
+        User::where('cabang_eskul2', $eskul)->delete();
+        User::where('cabang_eskul3', $eskul)->delete();
+
+        return $this->successRedirect();
+
+      }
     }
 }
 
 public function updateeskul(Request $request, $id)
 {
     if (Auth::user()->role == "admin") {
+
         $request->validate([
             'cabang_eskul' => 'required|string|max:255',
             'hari' => 'required|string|max:255',
             'waktu' => 'required|date_format:H:i',
             'tempat' => 'required|string|max:255',
         ]);
-
+        
         $eskul = Eskul::findOrFail($id);
 
         $eskul->update([
@@ -426,6 +529,27 @@ public function updateeskul(Request $request, $id)
     return redirect()->back()->with('notification', [
         'type' => 'error',
         'message' => 'Anda tidak memiliki izin untuk mengupdate jadwal.',
+    ]);
+}
+
+
+public function ajax(Request $request)
+{
+    $tanggal = $request->input('tanggal', now()->toDateString());
+
+    $siswaIzin = Absensi::where('role', 'siswa')
+        ->whereNotNull('alasan_izin')
+        ->whereDate('created_at', $tanggal)
+        ->get(['name', 'alasan_izin']);
+
+    $guruIzin = Absensi::where('role', 'guru')
+        ->whereNotNull('alasan_izin')
+        ->whereDate('created_at', $tanggal)
+        ->get(['name', 'alasan_izin']);
+
+    return response()->json([
+        'siswaIzin' => $siswaIzin,
+        'guruIzin' => $guruIzin,
     ]);
 }
 

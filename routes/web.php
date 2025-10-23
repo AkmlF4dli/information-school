@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\UploadsSiswaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\UpdateUserController;
@@ -48,9 +49,7 @@ Route::middleware('guest')->group(function () {
                 ->name('password.store');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [UserController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/delete/picture', [ProfileController::class, 'delete_picture'])->middleware(['auth', 'verified']);
 
@@ -71,12 +70,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/siswa/{identity}', [UserController::class, 'siswadestroy'])->name('siswa.destroy');
     Route::get('/ketuaeskul/{identity}', [UserController::class, 'ketuaeskuldestroy'])->name('ketuaeskul.destroy');
     Route::get('/pelatih/{identity}', [UserController::class, 'pelatihdestroy'])->name('pelatih.destroy');
-
+    // Import data siswa
+    Route::post('/siswa/upload/excel', [UploadsSiswaController::class, 'store'])->name('excel.upload');
+    Route::get('/siswa/download/excel', [UploadsSiswaController::class, 'download'])->name('excel.download');
+    Route::get('/api/siswa/search', [UploadsSiswaController::class, 'searchSiswa'])->name('api.siswa.search');
+    Route::get('/api/guru/search', [UploadsSiswaController::class, 'searchGuru'])->name('api.guru.search');
+ 
     // User policy by Guru Piket
-    Route::get('/siswa/izin/destroy/{identity}', [UserController::class, 'siswaIzindestroy'])->name('siswa.izin.destroy');
+    Route::delete('/siswa/izin/destroy/{identity}', [UserController::class, 'siswaIzindestroy'])->name('siswa.izin.destroy');
     Route::post('/siswa/izin/store', [UserController::class, 'siswaIzinstore'])->name('siswa.izin.store');
 
-    Route::get('/guru/izin/destroy/{identity}', [UserController::class, 'guruIzindestroy'])->name('guru.izin.destroy');
+    Route::delete('/guru/izin/destroy/{identity}', [UserController::class, 'guruIzindestroy'])->name('guru.izin.destroy');
     Route::post('/guru/izin/store', [UserController::class, 'guruIzinstore'])->name('guru.izin.store');
 
     // User policy by Siswa & Ketua Eskul
@@ -88,10 +92,15 @@ Route::middleware('auth')->group(function () {
     // User policy by Kesiswaan
     Route::post('/addeskul', [UserController::class, 'addeskul'])->name('addeskul');
     Route::post('/updateeskul/{id}', [UserController::class, 'updateeskul'])->name('updateeskul');
+    Route::get('/deleteeskul/{eskul}', [UserController::class, 'deleteeskul'])->name('deleteeskul');
 
     // User policy by Pelatih Eskul
     Route::post('/tambahkan/materi', [UserController::class, 'storemateri'])->name('events.store');
+
+    // ajax jadwal absensi
+    Route::get('/absensi/ajax', [UserController::class, 'ajax'])->name('absensi.ajax');
 });
+
 
 // Static Page 
 

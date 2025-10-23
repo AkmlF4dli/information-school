@@ -25,14 +25,5 @@ User::factory()->create([
     'remember_token' => null, 
 ]);
 
-User::factory()->create([
-    'picture' => '/storage/profile/profile.jpg',
-    'identity' => 2,
-    'name' => 'Kesiswaan',
-    'email' => 'kesiswaan@smkn8jakarta.sch.id',
-    'password' => Hash::make('smkn8'), // hashed password
-    'role' => 'kesiswaan',
-    'remember_token' => null, 
-]);
     }
 }
